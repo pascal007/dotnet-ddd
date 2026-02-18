@@ -2,4 +2,4 @@
 
 namespace WalletDemo.Application.Wallets.Queries;
 
-public record GetWalletByIdQuery(Guid Id) : IRequest<WalletDto?>;
+public record GetWalletByIdQuery(Guid Id, Guid UserId) : IRequest<WalletDto?>;

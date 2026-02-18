@@ -2,4 +2,4 @@
 
 namespace WalletDemo.Application.Wallets.Commands;
 
-public record CreateWalletCommand(string Owner, string Currency) : IRequest<Guid>;
+public record CreateWalletCommand( Guid UserId, string Currency) : IRequest<Guid>;

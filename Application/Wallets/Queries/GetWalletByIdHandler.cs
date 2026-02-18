@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using WalletDemo.Application.Interfaces;
-using WalletDemo.Domain.Aggregates;
 
 namespace WalletDemo.Application.Wallets.Queries;
 
@@ -15,7 +14,7 @@ public class GetWalletByIdHandler : IRequestHandler<GetWalletByIdQuery, WalletDt
 
     public async Task<WalletDto?> Handle(GetWalletByIdQuery request, CancellationToken cancellationToken)
     {
-        var wallet = await _repository.GetByIdAsync(request.Id);
+        var wallet = await _repository.GetByIdAndOwnerAsync(request.Id, request.UserId.ToString());
 
         if (wallet == null)
             return null;
@@ -23,7 +22,6 @@ public class GetWalletByIdHandler : IRequestHandler<GetWalletByIdQuery, WalletDt
         return new WalletDto
         {
             Id = wallet.Id,
-            Owner = wallet.Owner,
             Balance = wallet.Balance.Amount,
             Currency = wallet.Balance.Currency
         };

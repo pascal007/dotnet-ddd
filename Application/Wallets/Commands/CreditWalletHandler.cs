@@ -1,33 +1,38 @@
-﻿using MediatR;
+﻿
+using Application.Wallets.Commands;
+using MediatR;
 using WalletDemo.Application.Interfaces;
 using WalletDemo.Domain.Exceptions;
 using WalletDemo.Domain.ValueObjects;
 
 namespace WalletDemo.Application.Wallets.Commands;
 
-public class DebitWalletHandler : IRequestHandler<DebitWalletCommand>
+public class CreditWalletHandler : IRequestHandler<CreditWalletComand>
 {
     private readonly IWalletRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public DebitWalletHandler(IWalletRepository repository, IUnitOfWork unitOfWork)
+    public CreditWalletHandler(IWalletRepository repository, IUnitOfWork unitOfWork)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(DebitWalletCommand request, CancellationToken cancellationToken)
+    public async Task Handle(CreditWalletComand request, CancellationToken cancellationToken)
     {
+
         if (request.Amount <= 0)
             throw new DomainException("Amount must be greater than zero.");
 
-        var wallet = await _repository.GetByIdAsync(request.WalletId);
+
+        var wallet = await _repository.GetByIdAsync(request.ToWalletId);
 
         if (wallet == null)
             throw new DomainException("Wallet not found.");
 
-        wallet.Debit(request.TransferId, new Money(request.Amount, wallet.Balance.Currency));
+        wallet.Credit(wallet.TransferId, new Money(request.Amount, wallet.Balance.Currency));
         await _unitOfWork.SaveChangesAsync();
 
     }
 }
+

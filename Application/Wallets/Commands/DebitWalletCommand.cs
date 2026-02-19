@@ -1,4 +1,4 @@
 ﻿
 using MediatR;
 
-public record DebitWalletCommand(Guid WalletId, decimal Amount) : IRequest;
+public record DebitWalletCommand(Guid TransferId, Guid WalletId, decimal Amount) : IRequest;

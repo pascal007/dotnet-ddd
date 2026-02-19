@@ -1,5 +1,5 @@
 ﻿
-using WalletDemo.Domain.Aggregates;
+using Domain.Aggregates.User;
 using WalletDemo.Domain.ValueObjects;
 
 public interface IUserRepository

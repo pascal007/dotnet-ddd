@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WalletDemo.Application.Common;
 using WalletDemo.Application.Users.Commands;
-using WalletDemo.Application.Wallets.Commands;
 
 namespace WalletDemo.API.Controllers;
 

@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using WalletDemo.Domain.Aggregates;
+﻿using Domain.Aggregates.User;
+using Microsoft.EntityFrameworkCore;
 using WalletDemo.Domain.ValueObjects;
 using WalletDemo.Infrastructure.Persistence;
 

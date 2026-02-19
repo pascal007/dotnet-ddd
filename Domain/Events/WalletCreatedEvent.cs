@@ -1,9 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using WalletDemo.Domain.Common;
 
 namespace WalletDemo.Domain.Events;
 
-public record WalletCreatedEvent(Guid WalletId, string Owner, string Currency);
+public class WalletCreatedEvent : IDomainEvent
+{
+    public Guid WalletId { get; }
+    public string Currency { get; }
+
+    public Guid Owner { get; }
+
+    public DateTime OccurredOn { get; } = DateTime.UtcNow;
+
+    public WalletCreatedEvent(Guid walletId, string currency, Guid owner)
+    {
+        WalletId = walletId;
+        Currency = currency;
+        Owner = owner;
+    }
+}

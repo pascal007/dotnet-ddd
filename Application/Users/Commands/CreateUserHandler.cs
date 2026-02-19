@@ -1,8 +1,9 @@
 ﻿
 
+using Domain.Aggregates.User;
+using Domain.Aggregates.Wallet;
 using MediatR;
 using WalletDemo.Application.Interfaces;
-using WalletDemo.Domain.Aggregates;
 using WalletDemo.Domain.Common;
 using WalletDemo.Domain.Exceptions;
 using WalletDemo.Domain.ValueObjects;
@@ -47,7 +48,7 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, Guid>
 
         await _userRepository.AddAsync(user);
 
-        Wallet wallet = new Wallet(Guid.NewGuid(), user.Id.ToString(), Currencies.GBP);
+        Wallet wallet = new Wallet(Guid.NewGuid(), user.Id, Currencies.GBP);
 
         await _walletRepository.AddAsync(wallet);
         await _unitOfWork.SaveChangesAsync();

@@ -1,4 +1,4 @@
-﻿using WalletDemo.Domain.Aggregates;
+﻿using Domain.Aggregates.Wallet;
 
 namespace WalletDemo.Application.Interfaces;
 
@@ -6,9 +6,11 @@ public interface IWalletRepository
 {
     Task AddAsync(Wallet wallet);
     Task<Wallet?> GetByIdAsync(Guid id);
-    Task<Wallet?> GetByIdAndOwnerAsync(Guid id, string owner);
-    Task<List<Wallet>?> GetByOwnerAsync(string owner);
+    Task<Wallet?> GetByIdAndOwnerAsync(Guid id, Guid owner);
+    Task<List<Wallet>?> GetByOwnerAsync(Guid owner);
 
-    Task<Wallet?> GetByCurrencyAndOwner(string currency, string owner);
+    Task<Wallet?> GetByCurrencyAndOwnerAsync(string currency, Guid owner);
+
+    public Task<Wallet?> GetByCurrencyAndOwnerWithLockAsync(string currency, Guid owner);
     Task SaveChangesAsync();
 }

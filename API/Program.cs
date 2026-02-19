@@ -1,10 +1,12 @@
-using Microsoft.OpenApi.Models;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using WalletDemo.Application;
 using WalletDemo.Application.Interfaces;
 using WalletDemo.Infrastructure.Persistence;
 using WalletDemo.Infrastructure.Repositories;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +55,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IWalletReadRepository, WalletReadRepository>();
+
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
@@ -76,8 +80,14 @@ builder.Services.AddAuthentication("Bearer")
 builder.Services.AddAuthorization();
 
 
-builder.Services.AddMediatR(cfg =>cfg.RegisterServicesFromAssembly(typeof(WalletDemo.Application.AssemblyReference).Assembly));
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(AssemblyReference).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(AppDbContext).Assembly);
+});
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<ITransferRepository, TransferRepository>();
+
 
 
 var app = builder.Build();

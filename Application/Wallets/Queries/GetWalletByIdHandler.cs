@@ -14,7 +14,7 @@ public class GetWalletByIdHandler : IRequestHandler<GetWalletByIdQuery, WalletDt
 
     public async Task<WalletDto?> Handle(GetWalletByIdQuery request, CancellationToken cancellationToken)
     {
-        var wallet = await _repository.GetByIdAndOwnerAsync(request.Id, request.UserId.ToString());
+        var wallet = await _repository.GetByIdAndOwnerAsync(request.Id, request.UserId);
 
         if (wallet == null)
             return null;

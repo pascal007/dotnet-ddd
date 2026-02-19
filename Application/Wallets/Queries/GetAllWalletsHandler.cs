@@ -7,8 +7,6 @@ using WalletDemo.Domain.Aggregates;
 
 namespace Application.Wallets.Queries;
 
-
-
 public class GetAllWalletsHandler : IRequestHandler<GetAllWalletsQuery, List<WalletDto>>
 {
     private readonly IWalletRepository _repository;
@@ -20,7 +18,7 @@ public class GetAllWalletsHandler : IRequestHandler<GetAllWalletsQuery, List<Wal
 
     public async Task<List<WalletDto>> Handle(GetAllWalletsQuery request, CancellationToken cancellationToken)
     {
-        var wallets = await _repository.GetByOwnerAsync(request.UserId.ToString());
+        var wallets = await _repository.GetByOwnerAsync(request.UserId);
 
         return wallets.Select(w => new WalletDto
         {

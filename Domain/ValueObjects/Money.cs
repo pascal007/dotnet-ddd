@@ -1,4 +1,6 @@
-﻿namespace WalletDemo.Domain.ValueObjects;
+﻿using WalletDemo.Domain.Exceptions;
+
+namespace WalletDemo.Domain.ValueObjects;
 
 public record Money(decimal Amount, string Currency)
 {
@@ -15,7 +17,7 @@ public record Money(decimal Amount, string Currency)
         EnsureSameCurrency(other);
 
         if (Amount < other.Amount)
-            throw new InvalidOperationException("Insufficient funds.");
+            throw new DomainException("Insufficient funds.");
 
         return new Money(Amount - other.Amount, Currency);
     }
@@ -23,6 +25,6 @@ public record Money(decimal Amount, string Currency)
     private void EnsureSameCurrency(Money other)
     {
         if (Currency != other.Currency)
-            throw new InvalidOperationException("Currency mismatch.");
+            throw new DomainException("Currency mismatch.");
     }
 }

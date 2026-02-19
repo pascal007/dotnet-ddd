@@ -1,8 +1,9 @@
-﻿using WalletDemo.Domain.Exceptions;
+﻿using WalletDemo.Domain.Common;
+using WalletDemo.Domain.Exceptions;
 using WalletDemo.Domain.ValueObjects;
 
-namespace WalletDemo.Domain.Aggregates;
-public class User
+namespace Domain.Aggregates.User;
+public class User : AggregateRoot
 {
     public Guid Id { get; private set; }
     public string FirstName { get; private set; } = default!;

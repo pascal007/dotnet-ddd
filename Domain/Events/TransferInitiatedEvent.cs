@@ -12,6 +12,8 @@ public class TransferInitiatedEvent : IDomainEvent
     public decimal Amount { get; }
     public DateTime OccurredOn { get; } = DateTime.UtcNow;
 
+    public Guid AggregateId { get; }
+
     public TransferInitiatedEvent(Guid transferId, Guid fromWalletId, Guid toWalletId, decimal amount)
     {
         TransferId = transferId;

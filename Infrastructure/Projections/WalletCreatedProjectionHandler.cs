@@ -1,5 +1,5 @@
 ﻿
-namespace Infrastructure.Projections;
+namespace WalletDemo.Infrastructure.Projections;
 
 using MediatR;
 using System;

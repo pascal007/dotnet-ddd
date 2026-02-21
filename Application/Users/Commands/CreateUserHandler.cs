@@ -13,16 +13,14 @@ namespace WalletDemo.Application.Users.Commands;
 public class CreateUserHandler : IRequestHandler<CreateUserCommand, Guid>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IWalletRepository _walletRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
 
 
-    public CreateUserHandler(IUserRepository userRepository, IWalletRepository walletRepository, IUnitOfWork unitOfWork,
+    public CreateUserHandler(IUserRepository userRepository, IUnitOfWork unitOfWork,
         IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
-        _walletRepository = walletRepository;
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
     }
@@ -44,13 +42,14 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, Guid>
 
         var hashedPassword = _passwordHasher.Hash(request.Password);
 
-        var user = new User(Guid.NewGuid(), request.firstName, request.lastName, email, hashedPassword);
+        var user = User.Create(Guid.NewGuid(), request.firstName, request.lastName, email, hashedPassword);
 
         await _userRepository.AddAsync(user);
 
-        Wallet wallet = new Wallet(Guid.NewGuid(), user.Id, Currencies.GBP);
+        Wallet wallet = Wallet.Create(user.Id, Currencies.GBP);
 
-        await _walletRepository.AddAsync(wallet);
+        _unitOfWork.Track(wallet);
+
         await _unitOfWork.SaveChangesAsync();
 
         return user.Id;

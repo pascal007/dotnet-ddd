@@ -27,6 +27,7 @@ public class DebitWalletHandler : IRequestHandler<DebitWalletCommand>
             throw new DomainException("Wallet not found.");
 
         wallet.Debit(request.TransferId, new Money(request.Amount, wallet.Balance.Currency));
+        _unitOfWork.Track(wallet);
         await _unitOfWork.SaveChangesAsync();
 
     }

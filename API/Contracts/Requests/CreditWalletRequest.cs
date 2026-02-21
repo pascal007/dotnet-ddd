@@ -2,4 +2,4 @@
 
 namespace WalletDemo.API.Contracts.Requests;
 
-public record CreditWalletRequest(string Currency, decimal Amount) : IRequest;
+public record CreditWalletRequest(decimal Amount) : IRequest;

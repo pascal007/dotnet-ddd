@@ -1,5 +1,4 @@
-﻿using Application.Wallets.Commands;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WalletDemo.Api.Contracts.Wallets;
@@ -9,6 +8,7 @@ using WalletDemo.Application.Common;
 using WalletDemo.Application.Transfers.Commands;
 using WalletDemo.Application.Wallets.Commands;
 using WalletDemo.Application.Wallets.Queries;
+using WalletDemo.Domain.Aggregates.Transfer;
 
 namespace WalletDemo.API.Controllers;
 
@@ -63,7 +63,7 @@ public class WalletController : ControllerBase
     {
         var userId = User.GetUserId();
 
-        await _mediator.Send(new CreditWalletComand(null, id, creditWalletRequest.Amount));
+        await _mediator.Send(new CreditWalletComand(Guid.Empty, id, creditWalletRequest.Amount));
         return Ok(ApiResponse<string>.Ok("Wallet credited successfully"));
     }
 
@@ -74,23 +74,18 @@ public class WalletController : ControllerBase
         return Ok(ApiResponse<List<string>>.Ok(result));
     }
 
-    [HttpGet("walletBalance")]
-    public async Task<IActionResult> GetBalance(GetWalletBalanceRequest getWalletBalanceRequest)
-    {
-        var userId = User.GetUserId();
-
-        var result = await _mediator.Send(new GetWalletBalanceQuery(userId, getWalletBalanceRequest.WalletId));
-        return Ok(ApiResponse<List<string>>.Ok(null));
-    }
-
     [HttpPost("transfer")]
     public async Task<IActionResult> Transfer(TransferFundRequest transferFundRequest)
     {
         var userId = User.GetUserId();
 
-        await _mediator.Send(new TransferCommand(userId, transferFundRequest.sourceWallet, transferFundRequest.DestinationWallet,
+        var transferId = await _mediator.Send(new TransferCommand(userId, transferFundRequest.sourceWallet, transferFundRequest.DestinationWallet,
             transferFundRequest.Amount));
-        return Ok(ApiResponse<List<string>>.Ok(null));
+        return Accepted(ApiResponse<object>.Ok(new
+        {
+            TransferId = transferId,
+            Status = "Processing"
+        }));
     }
 
 }

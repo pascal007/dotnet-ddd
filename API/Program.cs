@@ -1,3 +1,4 @@
+using Infrastructure.EventSourcing;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -87,6 +88,8 @@ builder.Services.AddMediatR(cfg =>
 });
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<ITransferRepository, TransferRepository>();
+builder.Services.AddScoped<EventStoreRepository>();
+
 
 
 

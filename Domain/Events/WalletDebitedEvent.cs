@@ -1,19 +1,29 @@
 ﻿using WalletDemo.Domain.Common;
+using WalletDemo.Domain.ValueObjects;
 
 public class WalletDebitedEvent : IDomainEvent
 {
-    public Guid WalletId { get; }
-    public decimal Amount { get; }
-    public string Currency { get; }
-    public Guid TransferId { get; }
+    public Guid WalletId { get; init; }
+    public decimal Amount { get; init; }
+    public string Currency { get; init; }
+    public Guid TransferId { get; init; }
 
-    public Guid Owner {  get; }
-    public DateTime OccurredOn { get; } = DateTime.UtcNow;
+    public Guid Owner { get; init; }
+    public DateTime OccurredOn { get; init; }
 
-    public WalletDebitedEvent(Guid transferId, Guid walletId, decimal amount)
+    public Guid AggregateId { get; init; }
+
+    public WalletDebitedEvent () { }
+
+    public WalletDebitedEvent(Guid transferId, Guid walletId, Money money, Guid owner)
     {
         WalletId = walletId;
-        Amount = amount;
+        Amount = money.Amount;
+        Currency = money.Currency;
         TransferId = transferId;
+        AggregateId = walletId;
+        Owner = owner;
+        OccurredOn = DateTime.Now;
+
     }
 }

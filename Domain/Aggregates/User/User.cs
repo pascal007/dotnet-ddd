@@ -27,4 +27,10 @@ public class User : AggregateRoot
         Email = email;
         PasswordHash = passwordHash;
     }
+
+    public static User Create(Guid id, string firstName, string lastName, Email email, string passwordHash)
+    {
+        return new User(id, firstName, lastName, email, passwordHash);
+    }
+
 }

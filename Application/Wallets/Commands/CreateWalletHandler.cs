@@ -11,27 +11,31 @@ public class CreateWalletHandler : IRequestHandler<CreateWalletCommand, Guid>
 {
     private readonly IWalletRepository _repository;
     private readonly List<String> supportedCurrencies = new List<String>() { Currencies.GBP, Currencies.USD};
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateWalletHandler(IWalletRepository repository)
+    public CreateWalletHandler(IWalletRepository repository, IUnitOfWork unitOfWork)
     {
         _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Guid> Handle(CreateWalletCommand request, CancellationToken cancellationToken)
     {
         if (!supportedCurrencies.Contains(request.Currency))
-        {
             throw new DomainException("Submitted currency not supported");
-        }
-        var existingWallet = await _repository.GetByCurrencyAndOwnerAsync(request.Currency, request.UserId);
-        if (existingWallet != null) {
-            throw new DomainException("You already have a " + request.Currency + " wallet");
-        }
-        var wallet = new Wallet(Guid.NewGuid(), request.UserId, request.Currency);
 
-        await _repository.AddAsync(wallet);
-        await _repository.SaveChangesAsync();
+        bool existingWallet = await _repository.ExistsAsync(request.Currency, request.UserId);
+
+        if (existingWallet)
+            throw new DomainException("You already have a " + request.Currency + " wallet");
+
+        var wallet = Wallet.Create(request.UserId, request.Currency);
+
+        _unitOfWork.Track(wallet);
+
+        await _unitOfWork.SaveChangesAsync();
 
         return wallet.Id;
     }
+
 }

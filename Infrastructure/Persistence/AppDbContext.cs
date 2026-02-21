@@ -1,9 +1,9 @@
 ﻿using Domain.Aggregates.User;
-using Domain.Aggregates.Wallet;
 using Microsoft.EntityFrameworkCore;
 using WalletDemo.Application.Wallets.Projections;
 using WalletDemo.Domain.Aggregates.Transfer;
 using WalletDemo.Domain.ValueObjects;
+using WalletDemo.Infrastructure.EventSourcing;
 
 namespace WalletDemo.Infrastructure.Persistence;
 
@@ -13,24 +13,15 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<User> Users => Set<User>();
     public DbSet<WalletReadModel> WalletReadModels { get; set; }
     public DbSet<Transfer> Transfers => Set<Transfer>();
+    public DbSet<EventStoreEntity> EventStore => Set<EventStoreEntity>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Wallet>(builder =>
-        {
-            builder.HasKey(w => w.Id);
 
-            builder.OwnsOne(w => w.Balance, money =>
-            {
-                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("Balance");
-                money.Property(m => m.Currency).HasMaxLength(3).HasColumnName("Currency");
-            });
-        });
         modelBuilder.Entity<User>(builder =>
         {
             builder.HasKey(u => u.Id);
@@ -57,25 +48,7 @@ public class AppDbContext : DbContext
                    .IsRequired();
         });
 
-        modelBuilder.Entity<WalletReadModel>(builder =>
-        {
-            builder.HasKey(w => w.WalletId);
 
-            builder.Property(w => w.CurrentBalance)
-                   .HasPrecision(18, 2)
-                   .IsRequired();
-
-            builder.Property(w => w.Currency)
-                   .HasMaxLength(3)
-                   .IsRequired();
-
-            builder.Property(w => w.OwnerId)
-                    .IsRequired();
-
-
-            builder.Property(w => w.LastUpdated)
-                   .IsRequired();
-        });
 
         modelBuilder.Entity<Transfer>(builder =>
         {
@@ -95,6 +68,32 @@ public class AppDbContext : DbContext
                    .HasConversion<string>() 
                    .IsRequired();
         });
+
+        modelBuilder.Entity<EventStoreEntity>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+
+            builder.Property(e => e.AggregateType).IsRequired();
+            builder.Property(e => e.EventType).IsRequired();
+            builder.Property(e => e.EventData).IsRequired();
+        });
+
+        modelBuilder.Entity<WalletReadModel>(builder =>
+        {
+            builder.HasKey(w => w.WalletId);
+
+            builder.Property(w => w.Currency)
+                .HasMaxLength(3)
+                .IsRequired();
+
+            builder.Property(w => w.CurrentBalance)
+                .HasPrecision(18, 2);
+
+            builder.Property(w => w.OwnerId)
+                .IsRequired();
+        });
+
+
 
     }
 }

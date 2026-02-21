@@ -1,56 +1,69 @@
 ﻿using Domain.Aggregates.Wallet;
+using Infrastructure.EventSourcing;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using WalletDemo.Application.Interfaces;
+using WalletDemo.Domain.Common;
+using WalletDemo.Domain.Events;
+using WalletDemo.Infrastructure.EventSourcing;
 using WalletDemo.Infrastructure.Persistence;
 
 namespace WalletDemo.Infrastructure.Repositories;
 
 public class WalletRepository : IWalletRepository
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _appDbContext;
 
-    public WalletRepository(AppDbContext context)
+    public WalletRepository(AppDbContext appDbContext)
     {
-        _context = context;
+        _appDbContext = appDbContext;
+
     }
 
-    public async Task AddAsync(Wallet wallet)
+    public async Task<bool> ExistsAsync(string currency, Guid owner)
     {
-        await _context.Wallets.AddAsync(wallet);
-    }
-
-    public async Task<Wallet?> GetByCurrencyAndOwnerAsync(string currency, Guid owner)
-    {
-        return await _context.Wallets.FirstOrDefaultAsync(w => w.Balance.Currency == currency && w.Owner == owner);
-    }
-
-    public async Task<Wallet?> GetByCurrencyAndOwnerWithLockAsync(string currency, Guid owner)
-    {
-        return await _context.Wallets
-            .FromSqlInterpolated($@"
-            SELECT *
-            FROM Wallets WITH (UPDLOCK, ROWLOCK)")
-            .Where(w => w.Balance.Currency == currency && w.Owner == owner)
-            .FirstOrDefaultAsync();
-    }
-
-    public async Task<Wallet?> GetByIdAndOwnerAsync(Guid id, Guid owner)
-    {
-        return await _context.Wallets.FirstOrDefaultAsync(w => w.Id == id && w.Owner == owner);
+        return await _appDbContext.WalletReadModels
+            .AnyAsync(w => w.Currency == currency && w.OwnerId == owner);
     }
 
     public async Task<Wallet?> GetByIdAsync(Guid id)
     {
-        return await _context.Wallets.FirstOrDefaultAsync(w => w.Id == id);
+        var events = await _appDbContext.EventStore.Where(e => e.AggregateId == id &&
+                        e.AggregateType == "Wallet")
+            .OrderBy(e => e.OccurredOn)
+            .ToListAsync();
+
+        if (!events.Any())
+            return null;
+
+        var domainEvents = events
+            .Select(e => Deserialize(e))
+            .ToList();
+
+
+        return Wallet.Rehydrate(domainEvents);
     }
 
-    public async Task<List<Wallet>?> GetByOwnerAsync(Guid owner)
+    private IDomainEvent Deserialize(EventStoreEntity entity)
     {
-        return await _context.Wallets.Where(w => w.Owner == owner).ToListAsync();
+        return entity.EventType switch
+        {
+            nameof(WalletCreatedEvent) =>
+                JsonSerializer.Deserialize<WalletCreatedEvent>(entity.EventData)!,
+
+            nameof(WalletCreditedEvent) =>
+                JsonSerializer.Deserialize<WalletCreditedEvent>(entity.EventData)!,
+
+            nameof(WalletDebitedEvent) =>
+                JsonSerializer.Deserialize<WalletDebitedEvent>(entity.EventData)!,
+
+            nameof(WalletRefundedEvent) =>
+            JsonSerializer.Deserialize<WalletRefundedEvent>(entity.EventData)!,
+
+            _ => throw new InvalidOperationException(
+                $"Unknown event type: {entity.EventType}")
+        };
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+
 }

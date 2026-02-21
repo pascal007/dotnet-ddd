@@ -5,25 +5,26 @@ namespace WalletDemo.Application.Wallets.Queries;
 
 public class GetWalletByIdHandler : IRequestHandler<GetWalletByIdQuery, WalletDto?>
 {
-    private readonly IWalletRepository _repository;
+    private readonly IWalletReadRepository _readRepository;
 
-    public GetWalletByIdHandler(IWalletRepository repository)
+    public GetWalletByIdHandler(IWalletReadRepository readRepository)
     {
-        _repository = repository;
+        _readRepository = readRepository;
     }
+
 
     public async Task<WalletDto?> Handle(GetWalletByIdQuery request, CancellationToken cancellationToken)
     {
-        var wallet = await _repository.GetByIdAndOwnerAsync(request.Id, request.UserId);
+        var wallet = await _readRepository.GetByIdAndOwnerAsync(request.Id, request.UserId);
 
         if (wallet == null)
             return null;
 
         return new WalletDto
         {
-            Id = wallet.Id,
-            Balance = wallet.Balance.Amount,
-            Currency = wallet.Balance.Currency
+            Id = wallet.Value.Id,
+            Balance = wallet.Value.Balance,
+            Currency = wallet.Value.Currency
         };
     }
 }

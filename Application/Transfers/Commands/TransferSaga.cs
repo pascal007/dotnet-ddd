@@ -1,16 +1,20 @@
 ﻿
 
-using Application.Wallets.Commands;
 using MediatR;
 using WalletDemo.Application.Common;
 using WalletDemo.Application.Interfaces;
+using WalletDemo.Application.Wallets.Commands;
+using WalletDemo.Domain.Aggregates.Transfer;
 using WalletDemo.Domain.Events;
 
 namespace WalletDemo.Application.Transfers.Commands;
 public class TransferSaga :
     INotificationHandler<DomainEventNotification<TransferInitiatedEvent>>,
     INotificationHandler<DomainEventNotification<WalletDebitedEvent>>,
-    INotificationHandler<DomainEventNotification<WalletCreditedEvent>>
+    INotificationHandler<DomainEventNotification<WalletCreditedEvent>>,
+    INotificationHandler<DomainEventNotification<CreditFailedEvent>>,
+    INotificationHandler<DomainEventNotification<WalletRefundedEvent>>
+
 {
     private readonly IMediator _mediator;
     private readonly ITransferRepository _transferRepository;
@@ -47,7 +51,7 @@ public class TransferSaga :
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _mediator.Send(new CreditWalletComand(
-            e.TransferId,
+            transfer.Id,
             transfer.ToWalletId,
             transfer.Amount));
     }
@@ -56,14 +60,60 @@ public class TransferSaga :
     {
         var e = notification.DomainEvent;
 
+
+        if (e.TransferId != Guid.Empty)
+        {
+            var transfer = await _transferRepository.GetByIdAsync(e.TransferId);
+            if (transfer != null) {
+                transfer.MarkCompleted();
+            }
+
+        }
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        Console.WriteLine($"[SAGA] Credit completed {e.TransferId}");
+    }
+
+    public async Task Handle(DomainEventNotification<CreditFailedEvent> notification, CancellationToken cancellationToken)
+    {
+        var e = notification.DomainEvent;
+
+        Console.WriteLine($"[SAGA] Credit failed for {e.TransferId}");
+
+        if (e.TransferId == Guid.Empty)
+        {
+            Console.WriteLine("[SAGA] CreditFailedEvent without TransferId ignored.");
+            return;
+        }
+
         var transfer = await _transferRepository.GetByIdAsync(e.TransferId);
 
-        if (transfer == null) return;
+        if (transfer == null)
+        {
+            return;
+        }
 
-        transfer.MarkCompleted();
+        if (transfer.Status != TransferStatus.Debited)
+            return;
+
+        await _mediator.Send(new RefundWalletCommand(
+            e.TransferId,
+            transfer.FromWalletId,
+            e.Amount));
+    }
+
+    public async Task Handle(DomainEventNotification<WalletRefundedEvent> notification, CancellationToken cancellationToken)
+    {
+        var e = notification.DomainEvent;
+
+        var transfer = await _transferRepository.GetByIdAsync(e.TransferId);
+
+        transfer.MarkFailed();
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        Console.WriteLine($"[SAGA] Transfer completed {e.TransferId}");
+        Console.WriteLine($"[SAGA] Transfer {e.TransferId} refunded and marked failed");
     }
+
+
 }
